@@ -57,8 +57,6 @@ train_dataset, val_dataset, test_dataset = random_split(dataset, [train_size, va
 
 print(f'Dataset size: {dataset_size}\nTrain set size: {len(train_dataset)}\nValidation set size: {len(val_dataset)}\nTest set size: {len(test_dataset)}')
 
-loader = DataLoader(dataset, batch_size=BATCH_SIZE, shuffle=False)
-
 train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
 val_loader = DataLoader(val_dataset, batch_size=BATCH_SIZE, shuffle=True)
 test_loader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=True)
