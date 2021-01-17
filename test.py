@@ -4,8 +4,6 @@ import glob
 import matplotlib.pyplot as plt
 import random
 from PIL import Image
-from os import listdir
-from os.path import isfile, join
 import torchvision 
 import torch 
 import torchvision.models as models
