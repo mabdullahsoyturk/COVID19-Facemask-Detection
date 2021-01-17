@@ -10,13 +10,11 @@ import torchvision.models
 import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 from torch.utils.data import random_split, DataLoader
-from utils import get_path, parse_xml, create_directories, load_checkpoint, save_loss_fig, save_accuracy_fig
+from utils import load_checkpoint, save_loss_fig, save_accuracy_fig
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 mean, std = [0.6583, 0.4580, 0.0877], [0.2412, 0.2313, 0.2387]
-BATCH_SIZE, LEARNING_RATE, NUM_EPOCH, WEIGHT_DECAY = 16, 1e-4, 30, 0
-
-# create_directories()
+BATCH_SIZE, LEARNING_RATE, NUM_EPOCH, WEIGHT_DECAY = 16, 1e-4, 20, 0
 
 models = {
     'resnet18': torchvision.models.resnet18(),
@@ -45,6 +43,7 @@ def get_model(model_name):
     if torch.cuda.device_count() > 1:
         model = torch.nn.DataParallel(model)
 
+    model.to(device)
     return model
 
 model = get_model("resnet18")
@@ -69,12 +68,10 @@ test_loader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=True)
 criterion = torch.nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=LEARNING_RATE, weight_decay=WEIGHT_DECAY)
 
-model.to(device)
-
 best_epoch = 0
 training_losses, val_losses, training_accuracies, validation_accuracies = [], [], [], []
 
-def train():
+def train(model):
     for epoch in range(NUM_EPOCH):
         epoch_train_loss, correct, total = 0,0,0
 
@@ -123,7 +120,7 @@ def train():
             torch.save(checkpoint, "models/" + f'{epoch}.pth')
             print("Model saved")
 
-train()
+train(model)
 save_loss_fig(NUM_EPOCH, training_losses, val_losses)
 save_accuracy_fig(NUM_EPOCH, training_accuracies, validation_accuracies)
 
