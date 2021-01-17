@@ -6,39 +6,48 @@ import random
 from PIL import Image
 import torchvision 
 import torch 
-import torchvision.models as models
+import torchvision.models
 import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 from torch.utils.data import random_split, DataLoader
 from utils import get_path, parse_xml, create_directories, load_checkpoint, save_loss_fig, save_accuracy_fig
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-print(device)
-mean = [0.6583, 0.4580, 0.0877]
-std = [0.2412, 0.2313, 0.2387]
-BATCH_SIZE = 16
-LEARNING_RATE = 1e-4
-NUM_EPOCH = 30
-WEIGHT_DECAY = 0
+mean, std = [0.6583, 0.4580, 0.0877], [0.2412, 0.2313, 0.2387]
+BATCH_SIZE, LEARNING_RATE, NUM_EPOCH, WEIGHT_DECAY = 16, 1e-4, 30, 0
 
 # create_directories()
 
-model = models.mobilenet_v2()
-# model = models.resnet50()
-# model = models.vgg19()
-# model = models.densenet161()
-# model = models.resnet34(pretrained=True)
-#for layer, param in model.named_parameters():
-#    if 'fc' not in layer:
-#        param.requires_grad = False
+models = {
+    'resnet18': torchvision.models.resnet18(),
+    'resnet34': torchvision.models.resnet34(),
+    'resnet50': torchvision.models.resnet50(),
+    'vgg16': torchvision.models.vgg16(),
+    'vgg19': torchvision.models.vgg19(),
+    'densenet': torchvision.models.densenet161(),
+    'mobilenet': torchvision.models.mobilenet_v2()
+}
 
-#n_inputs = model.fc.in_features
-#last_layer = torch.nn.Linear(n_inputs, 3)
-#model.fc.out_features = last_layer
-model.classifier._modules['1'] = torch.nn.Linear(1280, 3)
-# model.classifier = torch.nn.Linear(2208,3)
-if torch.cuda.device_count() > 1:
-  model = torch.nn.DataParallel(model)
+def get_model(model_name):
+    model = models[model_name]
+
+    if "resnet" in model_name:
+        n_inputs = model.fc.in_features
+        last_layer = torch.nn.Linear(n_inputs, 3)
+        model.fc.out_features = last_layer
+    elif model_niame == 'mobilenet':
+        model.classifier._modules['1'] = torch.nn.Linear(1280, 3)
+    elif "vgg" in model_name:
+        model.classifier._modules['6'] = torch.nn.Linear(4096, 3)
+    elif model_name == 'densenet':
+        model.classifier = torch.nn.Linear(2208,3)
+    
+    if torch.cuda.device_count() > 1:
+        model = torch.nn.DataParallel(model)
+
+    return model
+
+model = get_model("resnet18")
 
 train_transforms = transforms.Compose([transforms.Resize((224,224)),transforms.ToTensor(),transforms.Normalize(mean=mean,std=std)])
 dataset = datasets.ImageFolder("train", transform = train_transforms)
