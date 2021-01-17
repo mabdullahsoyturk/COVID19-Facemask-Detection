@@ -9,6 +9,7 @@ import torch
 import torchvision.models as models
 import torchvision.transforms as transforms
 import torchvision.datasets as datasets
+from torch.utils.data import random_split, DataLoader
 from utils import get_path, parse_xml, create_directories, load_checkpoint, save_loss_fig, save_accuracy_fig
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -43,19 +44,18 @@ train_transforms = transforms.Compose([transforms.Resize((224,224)),transforms.T
 dataset = datasets.ImageFolder("train", transform = train_transforms)
 
 dataset_size = len(dataset)
-train_size = int(dataset_size * 0.6)
-val_size = int(dataset_size * 0.2)
+train_size, val_size = int(dataset_size * 0.6),  int(dataset_size * 0.2)
 test_size = dataset_size - train_size - val_size
 
-train_dataset, val_dataset, test_dataset = torch.utils.data.random_split(dataset, [train_size, val_size, test_size])
+train_dataset, val_dataset, test_dataset = random_split(dataset, [train_size, val_size, test_size])
 
 print(f'Dataset size: {dataset_size}\nTrain set size: {len(train_dataset)}\nValidation set size: {len(val_dataset)}\nTest set size: {len(test_dataset)}')
 
-loader = torch.utils.data.DataLoader(dataset, batch_size=BATCH_SIZE, shuffle=False)
+loader = DataLoader(dataset, batch_size=BATCH_SIZE, shuffle=False)
 
-train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
-val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=BATCH_SIZE, shuffle=True)
-test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=True)
+train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
+val_loader = DataLoader(val_dataset, batch_size=BATCH_SIZE, shuffle=True)
+test_loader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=True)
 
 criterion = torch.nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=LEARNING_RATE, weight_decay=WEIGHT_DECAY)
@@ -65,58 +65,56 @@ model.to(device)
 best_epoch = 0
 training_losses, val_losses, training_accuracies, validation_accuracies = [], [], [], []
 
-for epoch in range(NUM_EPOCH):
-    epoch_train_loss = 0
-    correct = 0
-    total = 0
+def train():
+    for epoch in range(NUM_EPOCH):
+        epoch_train_loss, correct, total = 0,0,0
 
-    model.train()
-    for X, y in train_loader:
-        X, y = X.to(device), y.to(device)
-        
-        optimizer.zero_grad()
-        result = model(X)
-        loss = criterion(result, y)
-        epoch_train_loss += loss.item()
-        loss.backward()
-        optimizer.step()
-
-        _, maximum = torch.max(result.data, 1)
-        total += y.size(0)
-        correct += (maximum == y).sum().item()
-    
-    training_accuracy = correct / total
-    training_losses.append(epoch_train_loss)
-    training_accuracies.append(training_accuracy)
-
-    epoch_val_loss = 0
-    correct = 0
-    total = 0
-    
-    with torch.no_grad():
-        model.eval()
-        for X, y in val_loader:
+        model.train()
+        for X, y in train_loader:
             X, y = X.to(device), y.to(device)
-             
+            
+            optimizer.zero_grad()
             result = model(X)
             loss = criterion(result, y)
-            epoch_val_loss += loss.item()
+            epoch_train_loss += loss.item()
+            loss.backward()
+            optimizer.step()
+
             _, maximum = torch.max(result.data, 1)
             total += y.size(0)
             correct += (maximum == y).sum().item()
-            
-    val_losses.append(epoch_val_loss)
-    accuracy = correct/total
-    validation_accuracies.append(accuracy)
-    print(f'EPOCH:{epoch}, Training Loss:{epoch_train_loss}, Validation Loss:{epoch_val_loss}, Training Accuracy: {training_accuracy}, Validation Accuracy: {accuracy}')
-    
-    if min(val_losses) == val_losses[-1]:
-        best_epoch = epoch
-        checkpoint = {'model': model, 'state_dict': model.state_dict(), 'optimizer' : optimizer.state_dict()}
+        
+        training_accuracy = correct / total
+        training_losses.append(epoch_train_loss)
+        training_accuracies.append(training_accuracy)
 
-        torch.save(checkpoint, "models/" + f'{epoch}.pth')
-        print("Model saved")
+        epoch_val_loss, correct, total = 0,0,0
+        
+        with torch.no_grad():
+            model.eval()
+            for X, y in val_loader:
+                X, y = X.to(device), y.to(device)
+                 
+                result = model(X)
+                loss = criterion(result, y)
+                epoch_val_loss += loss.item()
+                _, maximum = torch.max(result.data, 1)
+                total += y.size(0)
+                correct += (maximum == y).sum().item()
+                
+        val_losses.append(epoch_val_loss)
+        accuracy = correct/total
+        validation_accuracies.append(accuracy)
+        print(f'EPOCH:{epoch}, Training Loss:{epoch_train_loss}, Validation Loss:{epoch_val_loss}, Training Accuracy: {training_accuracy}, Validation Accuracy: {accuracy}')
+        
+        if min(val_losses) == val_losses[-1]:
+            best_epoch = epoch
+            checkpoint = {'model': model, 'state_dict': model.state_dict(), 'optimizer' : optimizer.state_dict()}
 
+            torch.save(checkpoint, "models/" + f'{epoch}.pth')
+            print("Model saved")
+
+train()
 save_loss_fig(NUM_EPOCH, training_losses, val_losses)
 save_accuracy_fig(NUM_EPOCH, training_accuracies, validation_accuracies)
 
