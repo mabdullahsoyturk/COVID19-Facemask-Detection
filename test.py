@@ -1,8 +1,6 @@
 import os
 import cv2
 import glob
-import matplotlib.pyplot as plt
-import random
 from PIL import Image
 import torchvision 
 import torch 
@@ -69,9 +67,10 @@ criterion = torch.nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=LEARNING_RATE, weight_decay=WEIGHT_DECAY)
 
 best_epoch = 0
-training_losses, val_losses, training_accuracies, validation_accuracies = [], [], [], []
 
 def train(model):
+    training_losses, val_losses, training_accuracies, validation_accuracies = [], [], [], []
+
     for epoch in range(NUM_EPOCH):
         epoch_train_loss, correct, total = 0,0,0
 
