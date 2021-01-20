@@ -4,11 +4,26 @@ import xmltodict
 import cv2
 import torch
 import matplotlib.pyplot as plt
+import argparse
 
 classes = {"with_mask": 0, "without_mask": 1, "mask_weared_incorrect": 2}
 IMAGE_DIR = 'dataset/images/'
 ANNOTATION_DIR = 'dataset/annotations/'
 TRAIN_DIR = 'train/'
+
+def get_arguments():
+    parser = argparse.ArgumentParser(description='PyTorch Mask Classifier Arguments')
+    parser.add_argument('--train', action='store_true')
+    parser.add_argument('--test', action='store_true')
+    parser.add_argument('--video', action='store_true')
+    parser.add_argument('--epochs', default=20, type=int)
+    parser.add_argument('-b', '--batch-size', default=32, type=int)
+    parser.add_argument('-d', '--weight-decay', default=1e-5, type=float)
+    parser.add_argument('-lr', '--learning-rate', default=1e-4, type=float, help='initial learning rate')
+    parser.add_argument('--model-path', default="models/9.pth")
+    parser.add_argument('-a', '--arch', default='resnet18')
+
+    return parser.parse_args()
 
 def get_image_names():
     paths = glob.glob("dataset/images/*")
