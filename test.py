@@ -15,7 +15,7 @@ from utils import load_checkpoint, save_loss_fig, save_accuracy_fig
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 mean, std = [0.6583, 0.4580, 0.0877], [0.2412, 0.2313, 0.2387]
-BATCH_SIZE, LEARNING_RATE, NUM_EPOCH, WEIGHT_DECAY = 16, 1e-4, 20, 1e-5
+BATCH_SIZE, LEARNING_RATE, NUM_EPOCH, WEIGHT_DECAY = 32, 1e-4, 20, 1e-5
 
 models = {
     'resnet18': torchvision.models.resnet18(),
@@ -50,7 +50,8 @@ def get_model(model_name):
 model = get_model("resnet18")
 criterion = torch.nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=LEARNING_RATE, weight_decay=WEIGHT_DECAY)
-scheduler = lr_scheduler.StepLR(optimizer, step_size=5, gamma=0.1)
+scheduler = lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=1)
+#scheduler = lr_scheduler.StepLR(optimizer, step_size=5, gamma=0.1)
 #optimizer = torch.optim.SGD(model.parameters(), lr=LEARNING_RATE, weight_decay=WEIGHT_DECAY)
 
 train_transforms = transforms.Compose([transforms.Resize((224,224)),transforms.ToTensor(),transforms.Normalize(mean=mean,std=std)])
@@ -84,7 +85,7 @@ def train(model):
     training_losses, val_losses, training_accuracies, validation_accuracies = [], [], [], []
 
     for epoch in range(NUM_EPOCH):
-        epoch_train_loss, correct, total = 0,0,0
+        epoch_train_loss, correct, train_total = 0,0,0
 
         model.train()
         for X, y in train_loader:
@@ -98,11 +99,11 @@ def train(model):
             optimizer.step()
 
             _, maximum = torch.max(result.data, 1)
-            total += y.size(0)
+            train_total += y.size(0)
             correct += (maximum == y).sum().item()
         
-        training_accuracy = correct / total
-        training_losses.append(epoch_train_loss / total)
+        training_accuracy = correct / train_total
+        training_losses.append(epoch_train_loss / train_total)
         training_accuracies.append(training_accuracy)
 
         epoch_val_loss, correct, total = 0,0,0
@@ -122,7 +123,7 @@ def train(model):
         val_losses.append(epoch_val_loss / total)
         accuracy = correct/total
         validation_accuracies.append(accuracy)
-        print(f'EPOCH:{epoch}, Training Loss:{epoch_train_loss / total}, Validation Loss:{epoch_val_loss / total}, Training Accuracy: {training_accuracy}, Validation Accuracy: {accuracy}')
+        print(f'EPOCH:{epoch}, Training Loss:{epoch_train_loss / train_total}, Validation Loss:{epoch_val_loss / total}, Training Accuracy: {training_accuracy}, Validation Accuracy: {accuracy}')
         
         if min(val_losses) == val_losses[-1]:
             best_epoch = epoch
@@ -131,14 +132,14 @@ def train(model):
             torch.save(checkpoint, "models/" + f'{epoch}.pth')
             print("Model saved")
 
-        scheduler.step()
+        scheduler.step(epoch_val_loss)
         print(optimizer.state_dict()['param_groups'][0]['lr'])
 
     save_loss_fig(NUM_EPOCH, training_losses, val_losses)
     save_accuracy_fig(NUM_EPOCH, training_accuracies, validation_accuracies)
 
 start_time = time.time()
-#train(model)
+train(model)
 end_time = time.time()
 duration = end_time - start_time
 print(f'Time it takes to train {duration}')
@@ -219,8 +220,8 @@ def get_prediction(image_tensor):
     _, predicted = torch.max(outputs.data, 1)
     return predicted
 
-tensor = transform_image()
-prediction = get_prediction(tensor)
-print(prediction.item())
+#tensor = transform_image()
+#prediction = get_prediction(tensor)
+#print(prediction.item())
 
 # test_video(loaded_model)
