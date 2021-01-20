@@ -4,7 +4,14 @@
 pip install -r requirements.txt
 ```
 
-Creating a virtual environment is recommended.
+Creating a virtual environment is recommended. Images are expected to be under "train" folder. Expected structure:
+
+```
+train/
+    0/
+    1/ 
+    2/
+```
 
 ## Usage
 
