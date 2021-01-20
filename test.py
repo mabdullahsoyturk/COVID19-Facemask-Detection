@@ -209,19 +209,18 @@ def test_video(model):
     cap.release()
     cv2.destroyAllWindows()
 
-def transform_image():
-    image = Image.open("diff_mask.jpeg")
-
-    return train_transforms(image).unsqueeze(0)
-
-def get_prediction(image_tensor):
-    images = image_tensor.to(device)
-    outputs = loaded_model(images)
-    _, predicted = torch.max(outputs.data, 1)
-    return predicted
-
-#tensor = transform_image()
-#prediction = get_prediction(tensor)
-#print(prediction.item())
-
 # test_video(loaded_model)
+
+def predict(image_name):
+    image = Image.open(image_name)
+    tensor = train_transforms(image).unsqueeze(0)
+    
+    images = tensor.to(device)
+    outputs = loaded_model(images)
+    _, pred = torch.max(outputs.data, 1)
+    return pred.item()
+ 
+    
+    return pred
+
+# predict("diff_mask.jpeg")
