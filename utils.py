@@ -14,8 +14,8 @@ TRAIN_DIR = 'train/'
 def get_arguments():
     parser = argparse.ArgumentParser(description='PyTorch Mask Classifier Arguments')
     parser.add_argument('--train', action='store_true')
-    parser.add_argument('--test', action='store_true')
-    parser.add_argument('--video', action='store_true')
+    parser.add_argument('--image', default=None)
+    parser.add_argument('--video', default=None)
     parser.add_argument('--epochs', default=20, type=int)
     parser.add_argument('-b', '--batch-size', default=32, type=int)
     parser.add_argument('-d', '--weight-decay', default=1e-5, type=float)
@@ -60,11 +60,10 @@ def create_directory(dirname):
     try:
         os.mkdir(dirname)
     except FileExistsError:
-        pass
-        # print("Directory " + dirname + " already exists.")
+        print("Directory " + dirname + " already exists.")
 
 def create_directories():
-    directories = [TRAIIN_DIR + "0/", TRAIN_DIR + "1/", TRAIN_DIR + "2/", "models/"]
+    directories = [TRAIN_DIR + "0/", TRAIN_DIR + "1/", TRAIN_DIR + "2/", "models/"]
 
     for directory in directories:
         create_directory(directory)
@@ -82,7 +81,7 @@ def crop_image(image_name):
         cropped_image = image[bndbox[0][1]:bndbox[1][1], bndbox[0][0]:bndbox[1][0]]
         label = classes[name]
         
-        croppped_pair = [cropped_image, label]
+        cropped_pair = [cropped_image, label]
         cropped_pairs.append(cropped_pair)
         
     return cropped_pairs

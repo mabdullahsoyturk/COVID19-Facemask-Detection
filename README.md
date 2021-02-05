@@ -1,3 +1,5 @@
+
+
 ## Installation
 
 ```
@@ -18,17 +20,17 @@ train/
 To train:
 
 ```
-python classifier.py --train
+python train.py
 ```
 
-To test:
+To test video (if you want to test on your laptop's camera, give video_path as 0):
 
 ```
-python classifier.py --test --model-path=<path_to_the_model>
+python test.py --video=<video_path> --model-path=<path_to_the_model>
 ```
 
-To video test:
+To test an image:
 
 ```
-python classifier.py --video --model-path=<path_to_the_model>
+python test.py --image=<image_path> --model-path=<path_to_the_model>
 ```
