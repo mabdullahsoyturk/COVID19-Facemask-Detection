@@ -22,9 +22,9 @@ Creating a virtual environment is recommended. Images are expected to be under "
 
 ```
 train/
-    0/
-    1/ 
-    2/
+    0/      # images with mask
+    1/      # images without mask
+    2/      # images with incorrectly weared mask
 ```
 
 ## Usage
