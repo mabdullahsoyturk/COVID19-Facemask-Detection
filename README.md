@@ -1,4 +1,16 @@
+![Mask Gif](COVID_Mask_Detection.gif)
 
+## Datasets That I Used
+* Cabani, Adnane, et al. “MaskedFace-Net -- A Dataset of Correctly/Incorrectly Masked Face Images in the Context of COVID-19.” Smart Health, vol. 19, Mar. 2021, p. 100144. arXiv.org, doi:10.1016/j.smhl.2020.100144.
+
+* "Face Mask Detection". kaggle.com. https://www.kaggle.com/andrewmvd/face-mask-detection,
+2021
+
+## Accuracy and Train Time
+
+If you have more than one GPU, train.py automatically runs it in parallel but the training times reported below is for single NVIDIA V100 GPU.
+
+![Accuracy and Train Time](accuracies.png)
 
 ## Installation
 
